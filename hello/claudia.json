@@ -1,0 +1,11 @@
+{
+  "lambda": {
+    "role": "hello-executor",
+    "name": "hello",
+    "region": "us-west-2"
+  },
+  "api": {
+    "id": "c3m4kxolog",
+    "module": "app"
+  }
+}

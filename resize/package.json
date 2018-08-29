@@ -1,0 +1,26 @@
+{
+  "name": "image-resize",
+  "author": "Tim Halley <timothy.halley@gmail.com>",
+  "version": "1.0.0",
+  "description": "SkiCycleRun - image resizing",
+  "readme": "For Whom the Bell Tolls",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/timothyhalley/skicyclerun.git"
+  },
+  "license": "Apache-2.0",
+  "main": "app.js",
+  "scripts": {
+    "start": "claudia create --handler app.handler --deploy-proxy-api --region us-west-2",
+    "update": "claudia update"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.153.0",
+    "color": "^2.0.1",
+    "semver": "^5.4.1",
+    "sharp": "^0.17.3"
+  },
+  "devDependencies": {
+    "claudia": "^2.14.2"
+  }
+}

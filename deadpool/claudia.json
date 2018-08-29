@@ -1,0 +1,11 @@
+{
+  "lambda": {
+    "role": "deadpool-executor",
+    "name": "deadpool",
+    "region": "us-west-2"
+  },
+  "api": {
+    "id": "ylpmz47lh7",
+    "module": "awsapi"
+  }
+}

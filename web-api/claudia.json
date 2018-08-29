@@ -1,0 +1,11 @@
+{
+  "lambda": {
+    "role": "web-api-executor",
+    "name": "web-api",
+    "region": "us-west-2"
+  },
+  "api": {
+    "id": "1hks131swf",
+    "module": "web"
+  }
+}

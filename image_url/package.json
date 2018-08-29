@@ -1,0 +1,22 @@
+{
+  "name": "image_url",
+  "description": "Scalable image endpoint for SKICYCLERUN...",
+  "private": true,
+  "files": [
+    "*.js"
+  ],
+  "scripts": {
+    "start": "claudia create --name image_url --region us-west-2 --api-module api --version dev",
+    "deploy": "claudia update"
+  },
+  "devDependencies": {
+    "claudia": "^3"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.186.0",
+    "claudia-api-builder": "^3"
+  },
+  "version": "1.0.0",
+  "main": "web.js",
+  "license": "MIT"
+}

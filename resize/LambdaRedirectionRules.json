@@ -1,0 +1,14 @@
+<RoutingRules>
+  <RoutingRule>
+    <Condition>
+      <KeyPrefixEquals/>
+      <HttpErrorCodeReturnedEquals>404</HttpErrorCodeReturnedEquals>
+    </Condition>
+    <Redirect>
+      <Protocol>https</Protocol>
+      <HostName>vjr4hex4te.execute-api.us-west-2.amazonaws.com</HostName>
+      <ReplaceKeyPrefixWith>latest/image-resize?key=</ReplaceKeyPrefixWith>
+      <HttpRedirectCode>307</HttpRedirectCode>
+    </Redirect>
+  </RoutingRule>
+</RoutingRules>

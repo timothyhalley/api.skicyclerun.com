@@ -1,0 +1,11 @@
+{
+  "lambda": {
+    "role": "image_url-executor",
+    "name": "image_url",
+    "region": "us-west-2"
+  },
+  "api": {
+    "id": "7lvhrmb9lh",
+    "module": "api"
+  }
+}

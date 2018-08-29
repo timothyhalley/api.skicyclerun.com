@@ -1,0 +1,24 @@
+{
+  "name": "deadpool",
+  "description": "AWS API aka Deadpool",
+  "private": true,
+  "files": [
+    "*.js"
+  ],
+  "scripts": {
+    "start": "claudia create --name deadpool --region us-west-2 --api-module awsapi --runtime nodejs8.10",
+    "deployit": "claudia update"
+  },
+  "devDependencies": {
+    "claudia": "^3"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.205.0",
+    "claudia-api-builder": "^3",
+    "jsonrequest": "^4.2.4",
+    "lodash": "^4.17.5"
+  },
+  "version": "6.6.6",
+  "main": "awsapi.js",
+  "license": "MIT"
+}
