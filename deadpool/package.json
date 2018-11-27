@@ -10,13 +10,11 @@
     "deployit": "claudia update"
   },
   "devDependencies": {
-    "claudia": "^3"
-  },
-  "dependencies": {
-    "aws-sdk": "^2.205.0",
+    "aws-sdk": "^2.363.0",
     "claudia-api-builder": "^3",
     "jsonrequest": "^4.2.4",
-    "lodash": "^4.17.5"
+    "lodash": "^4.17.11",
+    "claudia": "^5.2.0"
   },
   "version": "6.6.6",
   "main": "awsapi.js",
