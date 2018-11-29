@@ -9,7 +9,7 @@ var S3 = new AWS.S3({
 
 let data;
 const S3BUCKET = 'img.skicyclerun.com';
-const subFolder = 'BlackWhite';
+const subFolder = 'albums';
 const pubFolder = 'pub';
 
 // ***********************************************************************
@@ -73,7 +73,7 @@ var copyS3Image = async (cpKey) => {
     var cpParams = {
       Bucket: S3BUCKET,
       CopySource: S3BUCKET + '/' + cpKey,
-      Key: cpKey.replace('BlackWhite', 'pub')
+      Key: cpKey.replace(subFolder, 'pub')
     };
 
     var data = await S3.copyObject(cpParams).promise();
