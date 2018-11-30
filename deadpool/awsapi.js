@@ -316,7 +316,7 @@ api.get('/getNewImage', function(request) {
   //   success: 301
 });
 
-api.get('/simple', function(request) {
+api.get('/bucket', function(request) {
 
   var params = {
     Bucket: S3BUCKET,
