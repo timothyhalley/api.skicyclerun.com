@@ -218,11 +218,11 @@ api.get('/getImage/{urlFld}/{urlKey}', function(request) {
 
   var params = {
     Bucket: 'img.skicyclerun.com',
-    Prefix: 'BlackWhite',
-    MaxKeys: 50
+    Prefix: 'albums',
+    MaxKeys: 100
   };
 
-  // lenght of urlKey and ext is good then pass otherwise default
+  // length of urlKey and ext is good then pass otherwise default
   var urlFld = request.pathParams.urlFld;
   var urlKey = request.pathParams.urlKey;
   var urlImage = urlKey.match(/(\d+).jpg/gi);
@@ -253,32 +253,41 @@ api.get('/getImage/{urlFld}/{urlKey}', function(request) {
   success: 301
 });
 
-api.get('/getImageV2/{urlKey}', function(request) {
+api.get('/getImageV2/{urlAlbumName}/{urlImgRndNo}', function(request) {
 
   'use strict';
 
-  var params = {
-    Bucket: 'img.skicyclerun.com',
-    Prefix: 'BlackWhite',
-    MaxKeys: 50
-  };
 
-  // lenght of urlKey and ext is good then pass otherwise default
-  var urlKey = request.pathParams.urlKey;
-  var urlImage = urlKey.match(/(\d+).jpg/gi);
-  if (urlImage) {
+
+  // length of urlKey and ext is good then pass otherwise default
+  var urlAlbumName = request.pathParams.urlAlbumName;
+  var urlImgRndNo = request.pathParams.urlImgRndNo;
+  var urlImage_is_Number = urlImgRndNo.match(/(\d+).jpg/gi);
+  if (urlImage_is_Number) {
+    var params = {
+      Bucket: 'img.skicyclerun.com',
+      Prefix: 'albums',
+      MaxKeys: 100
+    };
     //Test Promise with Function return -- works!
-    var pGetKeys = s3KeyLists(params);
-    return pGetKeys
-      .then((data) => {
-        return data;
-      })
+    return S3.listObjectsV2(params).promise()
       .then(getOneS3Key)
-      .then(copyS3Image)
+      .then(cpKey => S3.copyObject({
+        Bucket: params.Bucket,
+        CopySource: params.Bucket + '/' + cpKey,
+        Key: keyVal
+      }).promise())
+      .then(cpData => eTagtoURL({
+        Bucket: S3BUCKET,
+        imgVal: keyVal,
+        eTag: cpData
+      }))
   } else {
-    return urlImage = 'SantaCatalinaIsland.jpg';
+    return urlImage = 'err/666.jpg';
   };
 
+}, {
+  success: 301
 });
 
 api.get('/verifyPath/{urlKey}', function(request) {
