@@ -7,10 +7,8 @@ var S3 = new AWS.S3({
   region: 'us-west-2'
 });
 
-let data;
-const S3BUCKET = 'img.skicyclerun.com';
-const subFolder = 'albums';
-const pubFolder = 'pub';
+let data = null;
+
 
 // ***********************************************************************
 function getETag(cpData) {
@@ -19,19 +17,6 @@ function getETag(cpData) {
   return etag;
 
 };
-
-function getOneKey(data) {
-
-  var allKeys = [];
-  var contents = data.Contents;
-  contents.forEach(function(content) {
-    allKeys.push(content.Key);
-  });
-  var keyLength = data.KeyCount;
-  var key = allKeys[Math.floor(Math.random() * keyLength)];
-
-  return key;
-}
 
 var getS3ImageKeys = async (params) => {
 
@@ -49,21 +34,38 @@ var getS3ImageKeys = async (params) => {
   return data;
 };
 
+function getOneKey(data) {
+
+  var allKeys = [];
+  var contents = data.Contents;
+  var keyLength = data.KeyCount;
+
+  for (let content of contents) {
+  //contents.forEach(function(content) {
+    allKeys.push(content.Key);
+  };
+
+  var key = allKeys[Math.floor(Math.random() * keyLength)];
+
+  return key;
+}
+
 var getOneS3Key = async (data) => {
 
   try {
 
-    data = getOneKey(data);
+    let key = await getOneKey(data);
+
+    console.log('result of getOneS3Key  = ', key)
+    return key;
 
   } catch (err) {
 
     console.log(err);
-    return err;
+    return null;
 
   }
 
-  //console.log('result of getOneS3Key  = ', data)
-  return data;
 };
 
 var copyS3Image = async (cpKey) => {
@@ -88,19 +90,26 @@ var copyS3Image = async (cpKey) => {
   return data;
 };
 
-async function chainPromises(params){
+async function start(params){
     try {
+
         const result = await getS3ImageKeys(params)
           .then(getOneS3Key)
           .then(copyS3Image);
         var etag = getETag(result);
-        console.log('chainPromises Fini: ', etag)
+        console.log('AWS S3 key Value = : ', result)
         return result;
+
     }
     catch(error){
         // Handle error
     }
 }
+
+// ---------------------------------------------------
+const S3BUCKET = 'img.skicyclerun.com';
+const subFolder = 'albums';
+const pubFolder = 'pub';
 
 var params = {
   Bucket: S3BUCKET,
@@ -108,5 +117,16 @@ var params = {
   MaxKeys: 55
 };
 
-chainPromises(params);
+(async () => {
+  try {
+
+    console.log('Allez!')
+    await start(params);
+    console.log('Fini!!!') // should be last thing said :)
+
+  } catch (e) {
+    console.error('ERROR: ', e);
+  }
+
+})();
 // ***********************************************************************

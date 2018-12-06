@@ -257,8 +257,6 @@ api.get('/getImageV2/{urlAlbumName}/{urlImgRndNo}', function(request) {
 
   'use strict';
 
-
-
   // length of urlKey and ext is good then pass otherwise default
   var urlAlbumName = request.pathParams.urlAlbumName;
   var urlImgRndNo = request.pathParams.urlImgRndNo;
