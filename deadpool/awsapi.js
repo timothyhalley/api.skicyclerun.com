@@ -8,8 +8,10 @@ var S3 = new AWS.S3({
 });
 
 const S3BUCKET = 'img.skicyclerun.com';
-const subFolder = 'BlackWhite';
-const pubFolder = 'pub';
+const FLDALBUMS = 'albums';
+const FLDPUBLIC = 'pub';
+const FLDPRIVATE = 'private';
+const MAXKEYS = 100;
 
 module.exports = api;
 
@@ -80,7 +82,7 @@ var eTagtoURL = async (cpResults) => {
     if (etag) {
       url = 'https://' + cpResults.Bucket + '/' + cpResults.imgVal;
     } else {
-      url = 'https://img.skicyclerun.com/pub/SantaCatalinaIsland.jpg';
+      url = 'https://img.skicyclerun.com/err/skicyclerun_error.jpg';
     }
 
   } catch (err) {
@@ -89,7 +91,6 @@ var eTagtoURL = async (cpResults) => {
     return err;
 
   }
-  console.log('URL key source is...  = ', url)
   return url;
 };
 
@@ -107,7 +108,7 @@ var copyS3Image = async (cpKey) => {
     var cpParams = {
       Bucket: S3BUCKET,
       CopySource: S3BUCKET + '/' + cpKey,
-      Key: cpKey.replace('BlackWhite', 'pub')
+      Key: cpKey.replace('albums', 'pub')
     };
 
     var data = await S3.copyObject(cpParams).promise();
@@ -119,14 +120,12 @@ var copyS3Image = async (cpKey) => {
     return err;
 
   }
+
 };
 
 var getS3ImageKeys = async (params) => {
 
   try {
-
-    console.log('sixthElement params = ', params)
-
 
     data = await S3.listObjectsV2(params).promise();
 
@@ -178,38 +177,34 @@ function copyRandomImage(params) {
 // ******************************************************************
 // API Gateway routes
 // ******************************************************************
-api.get('/', function(request) {
+api.get('/randomimg/{album}', function(request) {
 
   'use strict';
 
-  return 'https://img.skicyclerun.com/pub/SantaCatalinaIsland.jpg';
-
-}, {
-  success: 301
-});
-
-api.get('/default/{urlFolder}/{urlKey}', function(request) {
-
-  'use strict';
-
-  return 'https://img.skicyclerun.com/pub/SantaCatalinaIsland.jpg';
-
-}, {
-  success: 301
-});
-
-api.get('/testCopy/{urlKey}', function(request) {
-  'use strict';
+  var urlAlbum = request.pathParams.album;
 
   var params = {
-    Bucket: 'img.skicyclerun.com',
-    Prefix: 'BlackWhite',
-    MaxKeys: 50
+    Bucket: S3BUCKET,
+    Prefix: FLDALBUMS,
+    MaxKeys: MAXKEYS
   };
 
-  var CopyObjectResult = copyRandomImage(params);
-  return getETag(CopyObjectResult);
+  //Test Promise with Function return -- works!
+  return S3.listObjectsV2(params).promise()
+    .then(getOneS3Key)
+    .then(cpKey => S3.copyObject({
+      Bucket: params.Bucket,
+      CopySource: params.Bucket + '/' + cpKey,
+      Key: keyVal
+    }).promise())
+    .then(cpData => eTagtoURL({
+      Bucket: S3BUCKET,
+      imgVal: keyVal,
+      eTag: cpData
+    }))
 
+}, {
+  success: 301
 });
 
 api.get('/getImage/{urlFld}/{urlKey}', function(request) {
@@ -231,8 +226,8 @@ api.get('/getImage/{urlFld}/{urlKey}', function(request) {
     //Test Promise with Function return -- works!
     return S3.listObjectsV2({
         Bucket: S3BUCKET,
-        Prefix: 'BlackWhite',
-        MaxKeys: 50
+        Prefix: FLDALBUMS,
+        MaxKeys: MAXKEYS
       }).promise()
       .then(getOneS3Key)
       .then(cpKey => S3.copyObject({
@@ -246,7 +241,7 @@ api.get('/getImage/{urlFld}/{urlKey}', function(request) {
         eTag: cpData
       }))
   } else {
-    return urlImage = 'SantaCatalinaIsland.jpg';
+    return urlImage = 'err/skicyclerun_error.jpg';
   };
 
 }, {
@@ -263,9 +258,9 @@ api.get('/getImageV2/{urlAlbumName}/{urlImgRndNo}', function(request) {
   var urlImage_is_Number = urlImgRndNo.match(/(\d+).jpg/gi);
   if (urlImage_is_Number) {
     var params = {
-      Bucket: 'img.skicyclerun.com',
-      Prefix: 'albums',
-      MaxKeys: 100
+      Bucket: S3BUCKET,
+      Prefix: FLDALBUMS,
+      MaxKeys: MAXKEYS
     };
     //Test Promise with Function return -- works!
     return S3.listObjectsV2(params).promise()
@@ -281,7 +276,7 @@ api.get('/getImageV2/{urlAlbumName}/{urlImgRndNo}', function(request) {
         eTag: cpData
       }))
   } else {
-    return urlImage = 'err/666.jpg';
+    return urlImage = 'err/skicyclerun_error.jpg';
   };
 
 }, {
@@ -294,7 +289,7 @@ api.get('/verifyPath/{urlKey}', function(request) {
   var urlImage = urlKey.match(/(\d+).jpg/gi);
 
   if (urlImage) {
-    var url = 'https://img.skicyclerun.com/pub/' + urlImage;
+    var url = 'https://img.skicyclerun.com/pub/' + urlKey;
   } else {
     var url = 'https://img.skicyclerun.com/pub/SantaCatalinaIsland.jpg';
   }
@@ -303,34 +298,4 @@ api.get('/verifyPath/{urlKey}', function(request) {
 
 }, {
   success: 301
-});
-
-api.get('/getNewImage', function(request) {
-
-  var params = {
-    Bucket: S3BUCKET,
-    Prefix: subFolder,
-    MaxKeys: 55
-  };
-
-  return new Promise(function(resolve, reject) {
-    resolve(getS3ImageKeys(params)
-      .then(getOneS3Key)
-      .then(copyS3Image));
-  })
-
-  // }, {
-  //   success: 301
-});
-
-api.get('/bucket', function(request) {
-
-  var params = {
-    Bucket: S3BUCKET,
-    Prefix: subFolder,
-    MaxKeys: 55
-  };
-
-  return S3.listObjectsV2(params).promise();
-
 });
