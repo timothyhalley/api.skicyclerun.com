@@ -100,7 +100,7 @@ async function start(params) {
         const result = await getKey(params)
           .then(copyKey)
 
-        console.log('AWS S3 new URL Value = : ', result)
+        // console.log('AWS S3 new URL Value = : ', result)
         return result;
 
     }
@@ -121,8 +121,10 @@ var params = {
   try {
 
     console.log('Allez!')
-    await start(params);
-    console.log('Fini!!!') // should be last thing said :)
+    let pubURL = await start(params); // copy one random image from S3::albums into S::pub
+    console.log('Fini! Copy random image --> ', pubURL) // should be last thing said :)
+
+    // await getPhotoInfo(params, pubURL)
 
   } catch (e) {
     console.error('ERROR: ', e);
