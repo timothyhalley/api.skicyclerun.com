@@ -11,13 +11,13 @@
     "deployit": "claudia update"
   },
   "devDependencies": {
-    "claudia": "^5.2.0"
+    "claudia": "^5.4.0"
   },
   "version": "6.6.6",
   "main": "awsapi.js",
   "license": "MIT",
   "dependencies": {
-    "aws-sdk": "^2.367.0",
-    "claudia-api-builder": "^4.1.1"
+    "aws-sdk": "^2.395.0",
+    "claudia-api-builder": "^4.1.2"
   }
 }

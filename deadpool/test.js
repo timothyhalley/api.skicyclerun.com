@@ -45,20 +45,30 @@ var copyS3Image = async (cpKey) => {
   return data;
 };
 
-async function copyKey(keyIn) {
+async function copyKey(params) {
+
+  let keyIn = params[0];
+  let newImg = params[1];
+
+  aPath = keyIn.split('/');
+  let newURI = S3PUBLIC + '/' + aPath[1] + '/' + newImg;
+
+  console.log()
+
+  console.log('SHAZAMMM IT: ', keyIn, '\t', newURI)
 
   try {
 
     var cpParams = {
       Bucket: S3BUCKET,
       CopySource: S3BUCKET + '/' + keyIn,
-      Key: keyIn.replace(S3ALBUMS, S3PUBLIC)
+      Key: newURI
     };
 
     let data = await S3.copyObject(cpParams).promise();
 
     if (data.ETag) {
-      return keyIn.replace(S3ALBUMS, S3PUBLIC)
+      return newURI
     } else {
       return 'err/skicyclerun_error.jpg'
     }
@@ -72,7 +82,7 @@ async function copyKey(keyIn) {
   }
 }
 
-async function getKey(params) {
+async function getKey(params, newURI) {
 
   try {
 
@@ -84,7 +94,9 @@ async function getKey(params) {
       allKeys.push(content.Key);
     };
 
-    return allKeys[Math.floor(Math.random() * data.KeyCount)]; // URI path to image source
+    let kVal = allKeys[Math.floor(Math.random() * data.KeyCount)]; // URI path to image source
+    console.log('this is the key: ', kVal)
+    return [kVal, newURI];
 
   } catch (e) {
 
@@ -93,11 +105,11 @@ async function getKey(params) {
   }
 }
 
-async function start(params) {
+async function start(params, newURI) {
 
     try {
 
-        const result = await getKey(params)
+        const result = await getKey(params, newURI)
           .then(copyKey)
 
         // console.log('AWS S3 new URL Value = : ', result)
@@ -121,7 +133,8 @@ var params = {
   try {
 
     console.log('Allez!')
-    let pubURL = await start(params); // copy one random image from S3::albums into S::pub
+    let newURI = getRandomInt(90000, 10000) + '.jpg'
+    let pubURL = await start(params, newURI); // copy one random image from S3::albums into S::pub
     console.log('Fini! Copy random image --> ', pubURL) // should be last thing said :)
 
     // await getPhotoInfo(params, pubURL)
@@ -132,3 +145,8 @@ var params = {
 
 })();
 // ***********************************************************************
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+}
