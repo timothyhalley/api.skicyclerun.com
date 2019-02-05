@@ -25,7 +25,9 @@ api.get('/getImage/{album}/{image}', async function(request) {
 
   // length of urlKey and ext is good then pass otherwise default
   let uriAlbum = request.pathParams.album;
-  let uriImage = request.pathParams.image;
+  let uriImage = request.pathParams.image
+
+  // console.log('API ROUTE: getImage:', uriAlbum, '\t', uriImage);
 
   if (!uriAlbum) {
     uriAlbum = 'skiCycleRun';
@@ -72,7 +74,6 @@ api.get('/verifyPath/{album}/{image}', function(request) {
 // ******************************************************************
 async function getKey(params, uriPath) {
 
-  console.log('getKey: ', uriPath)
   try {
 
     let allKeys = [];
@@ -97,25 +98,25 @@ async function copyKey(params) {
   let keyIn = params[0];
   let uriPath = params[1];
 
-  console.log('DEBUG: func copyKey: ', keyIn, '\t', uriPath)
-
   try {
 
     //let newImgPath = keyIn.replace(S3ALBUMS, S3PUBLIC);
-    let newImagePath = S3PUBLIC + '/' + uriPath;
-    console.log('DEBUG: func copyKey - pub image path: ', newImgPath);
+    let srcKey = S3BUCKET + '/' + keyIn
+    let outKey = S3PUBLIC + '/' + uriPath;
+    console.log('DEBUG COPY: ', srcKey, ' to ', outKey);
 
     var cpParams = {
       Bucket: S3BUCKET,
-      CopySource: S3BUCKET + '/' + keyIn,
-      Key: newImgPath
+      CopySource: srcKey,
+      Key: outKey
     };
 
     let data = await S3.copyObject(cpParams).promise();
 
     if (data.ETag) {
-      return newImgPath;
+      return outKey;
     } else {
+      // console.log('ERROR: copyObject: ', data);
       return 'err/skicyclerun_error.jpg';
     }
 
