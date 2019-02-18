@@ -1,6 +1,7 @@
 /*global require, module*/
 'use strict';
 // Documentation:
+// text art --> http://patorjk.com/software/taag/#p=display&h=2&v=2&f=Calvin%20S&t=API%20Gateway%20Routes
 // AWS S3 API --> https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html
 const S3BUCKET = 'img.skicyclerun.com';
 const S3ALBUMS = 'albums';
@@ -27,39 +28,24 @@ const docClient = new AWS.DynamoDB.DocumentClient();
 module.exports = api;
 
 // ******************************************************************
-// API Gateway routes
+//
+// ╔═╗╔═╗╦  ╔═╗┌─┐┌┬┐┌─┐┬ ┬┌─┐┬ ┬  ╦═╗┌─┐┬ ┬┌┬┐┌─┐┌─┐
+// ╠═╣╠═╝║  ║ ╦├─┤ │ ├┤ │││├─┤└┬┘  ╠╦╝│ ││ │ │ ├┤ └─┐
+// ╩ ╩╩  ╩  ╚═╝┴ ┴ ┴ └─┘└┴┘┴ ┴ ┴   ╩╚═└─┘└─┘ ┴ └─┘└─┘
+//
 // ******************************************************************
-// Doc for API call --> https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/dynamodb-example-document-client.html
-api.get('/getMapData/{album}/{image}', async function(request) {
+api.get('/getImage/{fldID}/{album}/{image}', async function(request) {
 
-  let table = "Photos";
-  let uriAlbum = request.pathParams.album;
-  let uriImage = request.pathParams.image;
-  let pKey = _cc(uriAlbum + uriImage);
-
-  var params = {
-    TableName: table,
-    Key: {
-      "album": uriAlbum,
-      "pKey": pKey
-    }
-  };
-
-  console.debug('DEBUG: DB query parameters: album = ', uriAlbum, '   key=', pKey);
-
-  let pData = docClient.get(params).promise();
-
-  return pData;
-
-});
-
-api.get('/getImage/{album}/{image}', async function(request) {
+  // notes:
+  //  --> CACHE: add fldID to keep URL/URI same after copy when page reloads
+  let onlyNo = /[0-9].jpg/g;
 
   // length of urlKey and ext is good then pass otherwise default
+  let uriFldID = request.pathParams.fldID;
   let uriAlbum = request.pathParams.album;
   let uriImage = request.pathParams.image;
 
-  console.info('INFO: ROUTE getImage:', uriAlbum, '\t', uriImage);
+  // console.info('INFO: ROUTE getImage:', uriAlbum, '\t', uriImage);
 
   if (!uriAlbum) {
     uriAlbum = 'skiCycleRun';
@@ -77,17 +63,105 @@ api.get('/getImage/{album}/{image}', async function(request) {
     MaxKeys: S3MAXKEYS
   };
 
-  console.debug('DEBUG getImage params Prefix: ', params.Prefix)
+  // console.debug('DEBUG getImage params Prefix: ', params.Prefix)
 
   const result = await getKey(params, uriPath)
     .then(copyKey);
 
   let uriNewPath = 'https://' + S3BUCKET + '/' + result;
-  console.debug('DEBUG: final redirect:', uriNewPath)
+  // console.debug('DEBUG: final redirect:', uriNewPath)
   return uriNewPath;
 
 }, {
   success: 301
+});
+// ******************************************************************
+// ╔═╗╦ ╦╔═╗  ╔╦╗┬ ┬┌┐┌┌─┐┌┬┐┌─┐╔╦╗╔╗   ╔═╗╔═╗╔╦╗  ╔═╗╔═╗╔═╗
+// ╠═╣║║║╚═╗   ║║└┬┘│││├─┤││││ │ ║║╠╩╗  ║ ╦║╣  ║   ║ ╦╠═╝╚═╗
+// ╩ ╩╚╩╝╚═╝  ═╩╝ ┴ ┘└┘┴ ┴┴ ┴└─┘═╩╝╚═╝  ╚═╝╚═╝ ╩   ╚═╝╩  ╚═╝
+// Docs:
+//    https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/dynamodb-example-document-client.html
+//    https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#getObjectTagging-property
+//    https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObjectTagging-property
+// ******************************************************************
+api.get('/getPhotoTags/{fldID}/{album}/{image}', async function(request) {
+
+  let uriFldID = request.pathParams.fldID;
+  let uriAlbum = request.pathParams.album;
+  let uriImage = request.pathParams.image;
+
+  if (!uriAlbum) {
+    uriAlbum = 'skiCycleRun';
+  };
+
+  if (!uriImage) {
+    uriImage = '00000.jpg';
+  }
+
+  let pKey = uriFldID + '/' + uriAlbum + '/' + uriImage;
+
+  console.debug('DEBUG: sanity check: ', pKey);
+
+  // get tags from image:
+  var params = {
+    Bucket: S3BUCKET,
+    Key: pKey
+  };
+
+  try {
+
+    let pTags = await S3.getObjectTagging(params).promise();
+    // console.debug('DEBUG: getPhotoTags results: ', pTags)
+    //let pTags = await response.json();
+
+    //console.log(pTags.TagSet);
+    let pObj = {};
+    for (let i = 0; i < pTags.TagSet.length; i++) {
+      let newKey = pTags.TagSet[i].Key;
+      pObj[newKey] = pTags.TagSet[i].Value;
+    }
+
+    console.log('DEBUG: getPhotoTags - tag obj: ', pObj)
+    return pObj
+
+  } catch (err) {
+
+    console.error('ERROR: getPhotoTags --> ', err);
+    return getDefaultLocObj();
+
+  };
+
+});
+
+api.get('/getDBMeta/{fldID}/{album}/{image}', async function(request) {
+
+  let table = "Photos";
+
+  var uriAlbum = request.pathParams.album;
+  var uriImage = request.pathParams.image;
+  var uriPath = uriAlbum + '/' + uriImage;
+
+  var params = {
+    TableName: table,
+    Key: {
+      "album": uriAlbum,
+      "pKey": pKey
+    }
+  };
+
+  let pData = null;
+  try {
+
+    let pData = docClient.get(params).promise();
+
+  } catch (err) {
+
+    console.error('ERROR: getDBMeta --> ', err);
+
+  }
+
+  return pData
+
 });
 
 api.get('/verifyPath/{album}/{image}', function(request) {
@@ -97,7 +171,7 @@ api.get('/verifyPath/{album}/{image}', function(request) {
   var uriPath = uriAlbum + '/' + uriImage;
 
   let newPath = 'https://' + S3BUCKET + '/pub/' + uriPath;
-  console.debug('DEBUG: verifyPath 301 = ', newPath);
+  // console.debug('DEBUG: verifyPath 301 = ', newPath);
 
   return newPath;
 
@@ -134,12 +208,12 @@ async function copyKey(params) {
   let keyIn = params[0];
   let uriPath = params[1];
 
-  console.debug('DEBUG: copyKey input: ', keyIn, ' path: ', uriPath);
+  // console.debug('DEBUG: copyKey input: ', keyIn, ' path: ', uriPath);
   try {
 
     let srcKey = S3BUCKET + '/' + keyIn
     let outKey = S3PUBLIC + '/' + uriPath;
-    console.debug('DEBUG S3 COPY: ', srcKey, ' to ', outKey);
+    // console.debug('DEBUG S3 COPY: ', srcKey, ' to ', outKey);
 
     var cpParams = {
       Bucket: S3BUCKET,
@@ -157,7 +231,7 @@ async function copyKey(params) {
     //         return outKey;
     //       } // successful response
     let data = await S3.copyObject(cpParams).promise();
-    console.debug('DEBUG: S3.copyObject: ', data);
+    // console.debug('DEBUG: S3.copyObject: ', data);
     if (data.ETag) {
       return outKey;
     } else {
@@ -173,3 +247,20 @@ async function copyKey(params) {
 };
 
 api.addPostDeployConfig('tableName', 'DynamoDB Table Name:', 'configure-db');
+
+
+function getDefaultLocObj() {
+
+  let pObj = {
+    Copyright: 'skicyclerun.com',
+    GPSLatitude: '47.511893',
+    GPSLongitude: '-121.990184',
+    photoAlbum: 'skiCycleRun',
+    timeZone: 'America/Los_Angeles',
+    DTepoch: '0000000000',
+    pKey: 'skiCycleRunUnknown1',
+    photoName: 'Unknown1'
+  }
+
+  return pObj;
+}

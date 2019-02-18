@@ -13,6 +13,7 @@ var S3 = new AWS.S3({
   region: 'us-west-2'
 });
 
+const fetch = require('node-fetch');
 let data = null;
 
 
@@ -143,7 +144,28 @@ async function lambdaTest() {
 
 };
 
+async function getPhotoTags(alb, img) {
 
+  try {
+
+    let url = 'https://api.skicyclerun.com/deadpool/getPhotoTags/pub/' + alb + '/' + img;
+    let response = await fetch(url, {cache: 'no-cache'})
+    let pTags = await response.json();
+
+    //console.log(pTags.TagSet);
+    let pObj = {};
+    for (let i = 0; i < pTags.TagSet.length; i++) {
+      let newKey = pTags.TagSet[i].Key;
+      pObj[newKey] = pTags.TagSet[i].Value;
+    }
+    console.log('--> ', pObj)
+
+    return data;
+
+  } catch (e) {
+    console.log('ERROR: ', e)
+  }
+}
 // ---------------------------------------------------
 
 
@@ -157,19 +179,21 @@ async function lambdaTest() {
     };
 
     console.log('Allez!')
-    let newURI = getRandomInt(90000, 10000) + '.jpg'
-    let pubURL = await start(params, newURI); // copy one random image from S3::albums into S::pub
-    console.log('Fini! Copy random image --> ', pubURL) // should be last thing said :)
+    // let newURI = getRandomInt(90000, 10000) + '.jpg'
+    // let pubURL = await start(params, newURI); // copy one random image from S3::albums into S::pub
+    // console.log('Fini! Copy random image --> ', pubURL) // should be last thing said :)
 
     // console.log('\n\n\nCalling Lamda function via AWS:')
     // let lambdaResult = await lambdaTest();
-
+    getPhotoTags('skiCycleRun', 'ABCDEF.jpg')
 
   } catch (e) {
     console.error('ERROR: ', e);
   }
 
 })();
+
+
 // ***********************************************************************
 function getRandomInt(min, max) {
   min = Math.ceil(min);
