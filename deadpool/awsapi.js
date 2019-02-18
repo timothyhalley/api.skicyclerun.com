@@ -41,25 +41,25 @@ api.get('/getMapData/{album}/{image}', async function(request) {
     TableName: table,
     Key: {
       "album": uriAlbum,
-      "key": pKey
+      "pKey": pKey
     }
   };
 
-  console.log('DEBUG: DB query parameters: album = ', uriAlbum, '   key=', pKey);
+  console.debug('DEBUG: DB query parameters: album = ', uriAlbum, '   key=', pKey);
 
   let pData = docClient.get(params).promise();
 
   return pData;
+
 });
 
-api.get('/getImage/{pubFd}/{album}/{image}', async function(request) {
+api.get('/getImage/{album}/{image}', async function(request) {
 
   // length of urlKey and ext is good then pass otherwise default
-  let uriPubFd = request.pathParams.pubFd;
   let uriAlbum = request.pathParams.album;
   let uriImage = request.pathParams.image;
 
-  console.log('API ROUTE: getImage:', uriAlbum, '\t', uriImage);
+  console.info('INFO: ROUTE getImage:', uriAlbum, '\t', uriImage);
 
   if (!uriAlbum) {
     uriAlbum = 'skiCycleRun';
@@ -77,10 +77,14 @@ api.get('/getImage/{pubFd}/{album}/{image}', async function(request) {
     MaxKeys: S3MAXKEYS
   };
 
+  console.debug('DEBUG getImage params Prefix: ', params.Prefix)
+
   const result = await getKey(params, uriPath)
     .then(copyKey);
 
-  return 'https://' + S3BUCKET + '/' + result;
+  let uriNewPath = 'https://' + S3BUCKET + '/' + result;
+  console.debug('DEBUG: final redirect:', uriNewPath)
+  return uriNewPath;
 
 }, {
   success: 301
@@ -93,7 +97,7 @@ api.get('/verifyPath/{album}/{image}', function(request) {
   var uriPath = uriAlbum + '/' + uriImage;
 
   let newPath = 'https://' + S3BUCKET + '/pub/' + uriPath;
-  console.log('DEBUG: verifyPath 301 = ', newPath);
+  console.debug('DEBUG: verifyPath 301 = ', newPath);
 
   return newPath;
 
@@ -130,12 +134,12 @@ async function copyKey(params) {
   let keyIn = params[0];
   let uriPath = params[1];
 
+  console.debug('DEBUG: copyKey input: ', keyIn, ' path: ', uriPath);
   try {
 
-    //let newImgPath = keyIn.replace(S3ALBUMS, S3PUBLIC);
     let srcKey = S3BUCKET + '/' + keyIn
     let outKey = S3PUBLIC + '/' + uriPath;
-    console.log('DEBUG S3 COPY: ', srcKey, ' to ', outKey);
+    console.debug('DEBUG S3 COPY: ', srcKey, ' to ', outKey);
 
     var cpParams = {
       Bucket: S3BUCKET,
@@ -143,17 +147,26 @@ async function copyKey(params) {
       Key: outKey
     };
 
+    // s3.copyObject(cpParams, function(err, data) {
+    //       if (err) {
+    //         console.error(err, err.stack);
+    //         return 'err/skicyclerun_error.jpg';
+    //       } // an error occurred
+    //       else {
+    //         console.info(data);
+    //         return outKey;
+    //       } // successful response
     let data = await S3.copyObject(cpParams).promise();
-
+    console.debug('DEBUG: S3.copyObject: ', data);
     if (data.ETag) {
       return outKey;
     } else {
-      // console.log('ERROR: copyObject: ', data);
+      console.error('ERROR DeadPool: copyObject: ', data);
       return 'err/skicyclerun_error.jpg';
     }
 
   } catch (err) {
-
+    console.error('ERROR copyKey (try/catch): ', err)
     return 'err/skicyclerun_error.jpg';
 
   }

@@ -1,5 +1,5 @@
 const S3BUCKET = 'img.skicyclerun.com';
-const S3ALBUMS = 'albums';
+const S3ALBUMS = 'albums/skiCycleRun';
 const S3PUBLIC = 'pub';
 const S3PRIVATE = 'private';
 const S3MAXKEYS = 100;
@@ -68,12 +68,12 @@ async function copyKey(params) {
     let data = await S3.copyObject(cpParams).promise();
 
     if (data.ETag) {
+      console.debug('DEBUG: SUCCESS: ', data.ETag)
       return newURI
     } else {
+      console.debug('DEBUG: FAILED: ', data)
       return 'err/skicyclerun_error.jpg'
     }
-
-    return data;
 
   } catch (err) {
 
@@ -88,7 +88,10 @@ async function getKey(params, newURI) {
 
     let allKeys = [];
 
+    console.debug('DEBUG getKey:\n', params)
     let data = await S3.listObjectsV2(params).promise();
+
+    // console.debug('DEBUG DATA:\n', data)
 
     for (let content of data.Contents) {
       allKeys.push(content.Key);
@@ -122,22 +125,45 @@ async function start(params, newURI) {
     }
 }
 
-// ---------------------------------------------------
-var params = {
-  Bucket: S3BUCKET,
-  Prefix: S3ALBUMS,
-  MaxKeys: S3MAXKEYS
+async function lambdaTest() {
+
+  var params = {
+    FunctionName: 'deadpool',
+    // ClientContext: 'STRING_VALUE',
+    InvocationType: 'RequestResponse',
+    LogType: 'Tail',
+    Payload: 'getImage/pub/skiCycleRun/000001.jpg',
+    Qualifier: 'latest'
+  };
+
+  lambda.invoke(params, function(err, data) {
+    if (err) console.log(err, err.stack); // an error occurred
+    else console.log(data); // successful response
+  });
+
 };
+
+
+// ---------------------------------------------------
+
 
 (async () => {
   try {
+
+    var params = {
+      Bucket: S3BUCKET,
+      Prefix: S3ALBUMS,
+      MaxKeys: S3MAXKEYS
+    };
 
     console.log('Allez!')
     let newURI = getRandomInt(90000, 10000) + '.jpg'
     let pubURL = await start(params, newURI); // copy one random image from S3::albums into S::pub
     console.log('Fini! Copy random image --> ', pubURL) // should be last thing said :)
 
-    // await getPhotoInfo(params, pubURL)
+    // console.log('\n\n\nCalling Lamda function via AWS:')
+    // let lambdaResult = await lambdaTest();
+
 
   } catch (e) {
     console.error('ERROR: ', e);

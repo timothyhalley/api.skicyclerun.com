@@ -6,7 +6,7 @@
     "awsapi.js"
   ],
   "scripts": {
-    "start": "claudia create --name deadpool --region us-west-2 --api-module awsapi --policies policy --runtime nodejs8.10",
+    "start": "claudia create --name deadpool --region us-west-2 --policies policies/deadpool-policy.json --api-module awsapi  --runtime nodejs8.10",
     "test": "claudia test-lambda",
     "deployit": "claudia update"
   },
