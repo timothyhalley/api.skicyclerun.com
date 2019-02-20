@@ -7,7 +7,7 @@ const S3BUCKET = 'img.skicyclerun.com';
 const S3ALBUMS = 'albums';
 const S3PUBLIC = 'pub';
 const S3PRIVATE = 'private';
-const S3MAXKEYS = 100;
+const S3MAXKEYS = 250;
 
 // node libs
 
