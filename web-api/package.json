@@ -15,7 +15,7 @@
   "dependencies": {
     "claudia-api-builder": "^3",
     "denodeify": "^1.2.1",
-    "npm": "^5.7.1",
+     "npm": ">=6.13.4",
     "superb": "^1.2.0"
   },
   "version": "1.0.0",
